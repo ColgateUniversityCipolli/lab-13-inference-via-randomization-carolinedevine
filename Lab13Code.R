@@ -120,9 +120,10 @@ resamples.null.diff <- resamples.diff |>
 
 # CHECK: mean(resamples.null.diff$tstat.shifted)
 
-### Part B ###
+################# Part B ###################
 
 ## Closer ##
+
 # Bootstrap P-Value
 p.boot.closer <- mean(resamples.null.closer$tstat.shifted >= delta.closer)
 # T-Test P-Value
@@ -141,8 +142,28 @@ p.t.further <- t.test(dat.finches$further,
 p.t.further <- p.t.further$p.value
 
 ## Difference ##
+# Bootstrap P-Value
 low <- 0 - delta.diff
 high <- 0 + delta.diff
-p.low = mean(resamples.null.diff$tstat.shifted <= low)
-p.high = mean(resamples.null.diff$tstat.shifted >= high)
-p <- p.low + p.high
+p.low <- mean(resamples.null.diff$tstat.shifted <= low)
+p.high <- mean(resamples.null.diff$tstat.shifted >= high)
+p.boot.diff <- p.low + p.high
+# T-Test P-Value
+p.t.diff <- t.test(dat.finches$diff,
+                    mu = 0,
+                    alternative = "two.sided")
+p.t.diff <- p.t.diff$p.value
+
+comparison <- tibble(
+  Data = c("Closer", "Further", "Difference"),
+  `Bootstrap P-value` = c(p.boot.closer,
+                          p.boot.further,
+                          p.boot.diff),
+  `T-Test P-value` = c(p.t.closer,
+                       p.t.further,
+                       p.t.diff)
+)
+view(comparison)
+
+################# Part C ###################
+
