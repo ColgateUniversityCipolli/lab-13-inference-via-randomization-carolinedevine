@@ -154,7 +154,7 @@ p.t.diff <- t.test(dat.finches$diff,
                     alternative = "two.sided")
 p.t.diff <- p.t.diff$p.value
 
-comparison <- tibble(
+comparison.pvals <- tibble(
   Data = c("Closer", "Further", "Difference"),
   `Bootstrap P-value` = c(p.boot.closer,
                           p.boot.further,
@@ -163,7 +163,41 @@ comparison <- tibble(
                        p.t.further,
                        p.t.diff)
 )
-view(comparison)
+view(comparison.pvals)
 
 ################# Part C ###################
 
+#Closer
+percentile.boot.closer <- quantile(resamples.null.closer$tstat.shifted, 0.05)
+percentile.t.closer <- qt(0.05, df = n.closer -1)
+
+#Further
+percentile.boot.further <- quantile(resamples.null.further$tstat.shifted, 0.05)
+percentile.t.further <- qt(0.05, df = n.further -1)
+
+#Difference
+percentile.boot.diff <- quantile(resamples.null.diff$tstat.shifted, 0.05)
+percentile.t.diff <- qt(0.05, df = n.diff -1)
+
+comparison.percentile <- tibble(
+  Data = c("Closer", "Further", "Difference"),
+  `Bootstrap Percentile` = c(percentile.boot.closer,
+                             percentile.boot.further,
+                             percentile.boot.diff),
+  `T-Test Percentile` = c(percentile.t.closer,
+                          percentile.t.further,
+                          percentile.t.diff)
+)
+view(comparison.percentile)
+
+################# Part D ###################
+# Confidence Interval
+### use resamples for boot -- need this for x bar (floruorences)
+# Closer
+quantile(resamples.null.closer$tstat.shifted, c(0.025, 0.975))
+
+# Further
+quantile(resamples.null.further$tstat.shifted, c(0.025, 0.975))
+
+# Diff
+quantile(resamples.null.diff$tstat.shifted, c(0.025, 0.975))
