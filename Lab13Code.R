@@ -68,12 +68,14 @@ library(boot)
 R <- 10000
 s.closer <- sd(dat.finches$closer)
 n.closer <- length(dat.finches$closer)
-resamples.closer <- tibble(tstat=rep(NA, R))
+resamples.closer <-  tibble(tstat=rep(NA, R),
+                            xbar=rep(NA, R))
 for(i in 1:R){
   curr.resample <- sample(x = dat.finches$closer,
                           size = n.closer,
                           replace = T)
   resamples.closer$tstat[i] <- (mean(curr.resample)-0)/(s.closer/sqrt(n.closer))
+  resamples.closer$xbar[i] <- mean(curr.resample)
 }
 # shift so H0 is true
 
@@ -88,12 +90,14 @@ resamples.null.closer <- resamples.closer |>
 R <- 10000
 s.further <- sd(dat.finches$further)
 n.further <- length(dat.finches$further)
-resamples.further <- tibble(tstat=rep(NA, R))
+resamples.further <- tibble(tstat=rep(NA, R),
+                            xbar=rep(NA, R))
 for(i in 1:R){
   curr.resample <- sample(x = dat.finches$further,
                           size = n.further,
                           replace = T)
   resamples.further$tstat[i] <- (mean(curr.resample)-0)/(s.further/sqrt(n.further))
+  resamples.further$xbar[i] <- mean(curr.resample)
 }
 # shift so H0 is true
 delta.further <- mean(resamples.further$tstat) - 0 # null mu0 = 0
@@ -106,12 +110,14 @@ resamples.null.further <- resamples.further |>
 R <- 10000
 s.diff <- sd(dat.finches$diff)
 n.diff <- length(dat.finches$diff)
-resamples.diff <- tibble(tstat=rep(NA, R))
+resamples.diff <-  tibble(tstat=rep(NA, R),
+                          xbar=rep(NA, R))
 for(i in 1:R){
   curr.resample <- sample(x = dat.finches$diff,
                           size = n.diff,
                           replace = T)
   resamples.diff$tstat[i] <- (mean(curr.resample)-0)/(s.diff/sqrt(n.diff))
+  resamples.diff$xbar[i] <- mean(curr.resample)
 }
 # shift so H0 is true
 delta.diff <- mean(resamples.diff$tstat) - 0 # null mu0 = 0
@@ -166,7 +172,7 @@ comparison.pvals <- tibble(
 view(comparison.pvals)
 
 ################# Part C ###################
-
+# Want to use shifted t stat for the p-value
 #Closer
 percentile.boot.closer <- quantile(resamples.null.closer$tstat.shifted, 0.05)
 percentile.t.closer <- qt(0.05, df = n.closer -1)
@@ -193,11 +199,35 @@ view(comparison.percentile)
 ################# Part D ###################
 # Confidence Interval
 ### use resamples for boot -- need this for x bar (floruorences)
+# want to use resample x bars (not shifted) for the confidence interval
 # Closer
-quantile(resamples.null.closer$tstat.shifted, c(0.025, 0.975))
+CI.boot.closer <- quantile(resamples.null.closer$xbar, c(0.025, 0.975))
+CI.t.closer <- t.test(x=dat.finches$closer, mu = 0, conf.level = 0.95, alternative = "two.sided")
+CI.t.closer <- CI.t.closer$conf.int
 
 # Further
-quantile(resamples.null.further$tstat.shifted, c(0.025, 0.975))
+CI.boot.further <- quantile(resamples.null.further$xbar, c(0.025, 0.975))
+CI.t.further <- t.test(x=dat.finches$further, mu = 0, conf.level = 0.95, alternative = "two.sided")
+CI.t.further <- CI.t.further$conf.int
 
 # Diff
-quantile(resamples.null.diff$tstat.shifted, c(0.025, 0.975))
+CI.boot.further <- quantile(resamples.null.diff$xbar, c(0.025, 0.975))
+CI.t.diff <- t.test(x=dat.finches$diff, mu = 0, conf.level = 0.95, alternative = "two.sided")
+CI.t.diff <- CI.t.diff$conf.int
+
+comparison.CI <- tibble(
+  Data = c("Closer", "Further", "Difference"),
+  `Bootstrap Confidence Interval` = c(CI.boot.closer,
+                                      CI.boot.further,
+                                      CI.boot.further),
+  `T-Test  Confidence Interval` = c(CI.t.closer,
+                                    CI.t.further,
+                                    CI.t.diff)
+)
+view(comparison.CI)
+
+
+################################################################################
+# Question 3: Boostrapping
+################################################################################
+
