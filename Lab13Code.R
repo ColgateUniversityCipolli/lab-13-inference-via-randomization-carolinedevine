@@ -215,19 +215,325 @@ CI.boot.further <- quantile(resamples.null.diff$xbar, c(0.025, 0.975))
 CI.t.diff <- t.test(x=dat.finches$diff, mu = 0, conf.level = 0.95, alternative = "two.sided")
 CI.t.diff <- CI.t.diff$conf.int
 
-comparison.CI <- tibble(
-  Data = c("Closer", "Further", "Difference"),
-  `Bootstrap Confidence Interval` = c(CI.boot.closer,
-                                      CI.boot.further,
-                                      CI.boot.further),
-  `T-Test  Confidence Interval` = c(CI.t.closer,
-                                    CI.t.further,
-                                    CI.t.diff)
-)
-view(comparison.CI)
+
+################################################################################
+# Question 3: Randomization Test
+################################################################################
+
+################################################################################
+# Closer (#3)
+################################################################################# Since we do not know the generating distribution for closer, furhter, and difference data
+# We need to preform randomization procedure.
+mu0 <- 0
+R <- 10000
+rand.closer <- tibble(xbars = rep(NA, R))
+
+# PREPROCESSING: shift the data to be mean 0 under H0
+x.shift.closer <- dat.finches$closer - mu0
+# RANDOMIZE / SHUFFLE
+for(i in 1:R){
+  curr.rand <- x.shift.closer *
+    sample(x = c(-1, 1),
+           size = length(x.shift.closer),
+           replace = T)
+  
+  rand.closer$xbars[i] <- mean(curr.rand)
+}
+rand.closer <- rand.closer |>
+  mutate(xbars = xbars + mu0) # shifting back
+
+# p-value 
+obs.mean.closer <- mean(dat.finches$closer)
+p.rand.closer <- mean(rand.closer$xbars >= obs.mean.closer)
+
+## Confidence Interval ##
+R <- 1000
+mu0.iterate <- 0.01
+starting.point.closer <- mean(dat.finches$closer)
+
+mu.lower.closer <- starting.point.closer
+repeat{
+  rand.closer <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.closer <- dat.finches$close - mu.lower.closer
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.closer *
+      sample(x = c(-1, 1),
+             size = length(x.shift.closer),
+             replace = T)
+    
+    rand.closer$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.closer <- rand.closer |>
+    mutate(xbars = xbars + mu.lower.closer) # shifting back
+  
+  # p-value  (one-sided)
+  obs.mean.closer <- mean(dat.finches$closer)
+  p.val.closer <- mean(rand.closer$xbars >= obs.mean.closer)
+  
+  if(p.val.closer < 0.05){
+    break
+  }else{
+    mu.lower.closer <- mu.lower.closer - mu0.iterate
+  }
+}
+
+mu.upper.closer <- starting.point.closer
+repeat{
+  rand.closer <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.closer <- dat.finches$close - mu.lower.closer
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.closer *
+      sample(x = c(-1, 1),
+             size = length(x.shift.closer),
+             replace = T)
+    
+    rand.closer$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.closer <- rand.closer |>
+    mutate(xbars = xbars + mu.lower.closer) # shifting back
+  
+  # p-value  (one-sided)
+  obs.mean.closer <- mean(dat.finches$closer)
+  p.val.closer <- mean(rand.closer$xbars >= obs.mean.closer)
+  
+  if(p.val.closer < 0.05){
+    break
+  }else{
+    mu.upper.closer <- mu.upper.closer + mu0.iterate
+  }
+}
+
+c(mu.lower.closer, mu.upper.closer)
 
 
 ################################################################################
-# Question 3: Boostrapping
+# Further (#3)
 ################################################################################
+# We need to preform randomization procedure.
+mu0 <- 0
+R <- 10000
+rand.closer <- tibble(xbars = rep(NA, R))
+
+# PREPROCESSING: shift the data to be mean 0 under H0
+x.shift.closer <- dat.finches$closer - mu0
+# RANDOMIZE / SHUFFLE
+for(i in 1:R){
+  curr.rand <- x.shift.closer *
+    sample(x = c(-1, 1),
+           size = length(x.shift.closer),
+           replace = T)
+  
+  rand.closer$xbars[i] <- mean(curr.rand)
+}
+rand.closer <- rand.closer |>
+  mutate(xbars = xbars + mu0) # shifting back
+
+# p-value 
+obs.mean.closer <- mean(dat.finches$closer)
+p.rand.closer <- mean(rand.closer$xbars >= obs.mean.closer)
+
+## Confidence Interval ##
+R <- 1000
+mu0.iterate <- 0.01
+starting.point.further <- mean(dat.finches$further)
+
+mu.lower.further <- starting.point.further
+repeat{
+  rand.further <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.further <- dat.finches$further - mu.lower.further
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.further *
+      sample(x = c(-1, 1),
+             size = length(x.shift.further),
+             replace = T)
+    
+    rand.further$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.further <- rand.further |>
+    mutate(xbars = xbars + mu.lower.further) # shifting back
+  
+  # p-value  (one-sided)
+  obs.mean.further <- mean(dat.finches$further)
+  p.val.further <- mean(rand.further$xbars >= obs.mean.further)
+  
+  if(p.val.further < 0.05){
+    break
+  }else{
+    mu.lower.further <- mu.lower.further - mu0.iterate
+  }
+}
+
+mu.upper.further <- starting.point.further
+repeat{
+  rand.further <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.further <- dat.finches$further - mu.lower.further
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.further *
+      sample(x = c(-1, 1),
+             size = length(x.shift.further),
+             replace = T)
+    
+    rand.further$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.further <- rand.further |>
+    mutate(xbars = xbars + mu.lower.further) # shifting back
+  
+  # p-value  (one-sided)
+  obs.mean.further <- mean(dat.finches$further)
+  p.val.further <- mean(rand.further$xbars >= obs.mean.further)
+  
+  if(p.val.further < 0.05){
+    break
+  }else{
+    mu.upper.further <- mu.upper.further + mu0.iterate
+  }
+}
+
+c(mu.lower.further, mu.upper.further)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+################################################################################
+# Diff (#3)
+################################################################################
+# We need to preform randomization procedure.
+mu0 <- 0
+R <- 10000
+rand.closer <- tibble(xbars = rep(NA, R))
+
+# PREPROCESSING: shift the data to be mean 0 under H0
+x.shift.closer <- dat.finches$closer - mu0
+# RANDOMIZE / SHUFFLE
+for(i in 1:R){
+  curr.rand <- x.shift.closer *
+    sample(x = c(-1, 1),
+           size = length(x.shift.closer),
+           replace = T)
+  
+  rand.closer$xbars[i] <- mean(curr.rand)
+}
+rand.closer <- rand.closer |>
+  mutate(xbars = xbars + mu0) # shifting back
+
+# p-value 
+(delta.closer <- abs(mean(dat.finches$closer) - mu0))
+(low.closer <- mu0 - delta.closer) # mirror
+(high.closer <- mu0 + delta.closer)   # xbar
+
+p.rand.closer <- mean(rand.closer$xbars <= low.closer) + 
+  mean(rand.closer$xbars >= high.closer)
+
+## Confidence Interval ##
+R <- 1000
+mu0.iterate <- 0.01
+starting.point.closer <- mean(dat.finches$closer)
+
+mu.lower.closer <- starting.point.closer
+repeat{
+  rand.closer <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.closer <- dat.finches$close - mu.lower.closer
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.closer *
+      sample(x = c(-1, 1),
+             size = length(x.shift.closer),
+             replace = T)
+    
+    rand.closer$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.closer <- rand.closer |>
+    mutate(xbars = xbars + mu.lower.closer) # shifting back
+  
+  # p-value  (one-sided)
+  (delta.closer <- abs(mean(dat.finches$closer) - mu.lower.closer))
+  (low.closer <- mu.lower.closer - delta.closer) # mirror
+  (high.closer <- mu.lower.closer + delta.closer)   # xbar
+  (p.val.closer <- mean(rand.closer$xbars <= low.closer) +
+      mean(rand.closer$xbars >= high.closer))
+  
+  if(p.val.closer < 0.05){
+    break
+  }else{
+    mu.lower.closer <- mu.lower.closer - mu0.iterate
+  }
+}
+
+mu.upper.closer <- starting.point.closer
+repeat{
+  rand.closer <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.closer <- dat.finches$close - mu.lower.closer
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.closer *
+      sample(x = c(-1, 1),
+             size = length(x.shift.closer),
+             replace = T)
+    
+    rand.closer$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.closer <- rand.closer |>
+    mutate(xbars = xbars + mu.lower.closer) # shifting back
+  
+  # p-value 
+  (delta.closer <- abs(mean(dat.finches$closer) - mu.lower.closer))
+  (low.closer <- mu.lower.closer - delta.closer) # mirror
+  (high.closer <- mu.lower.closer + delta.closer)   # xbar
+  (p.val.closer <- mean(rand.closer$xbars <= low.closer) +
+      mean(rand.closer$xbars >= high.closer))
+  
+  if(p.val.closer < 0.05){
+    break
+  }else{
+    mu.upper.closer <- mu.upper.closer + mu0.iterate
+  }
+}
+
+c(mu.lower.closer, mu.upper.closer)
+
 
