@@ -37,11 +37,67 @@ for the the further observations.
   where $f_Z(\cdot)$ and $F_Z(\cdot)$ are the Gaussian PDF and CDF and skew is the
   skewness of the data. What is the potential error in the computation of the 
   $p$-value when testing $H_0: \mu_X=0; H_a: \mu_X<0$ using the zebra finch further data? 
+<<echo=TRUE, message=FALSE, warning=FALSE>>=
+library(tidyverse)
+library(xtable)
+library(VGAM)
+library(e1071)
+library(pwr)
+library(effectsize)
+### Part A ### -> using further observations
+dat.finches <- read.csv("zebrafinches.csv")
+
+further <- dat.finches$further
+mu0 <- 0
+t.further <- t.test(further,
+                    mu = mu0,
+                    alternative = "less")
+t.stat.further <- t.further$statistic
+n <- length(further)
+skewness <- skewness(further)
+fz <- dnorm(t.stat.further)
+Fz <- pnorm(t.stat.further)
+
+(edgeworth.approx.error <- (skewness/sqrt(n)) * 
+    (((2*(t.stat.further)^2 + 1)/6)*(fz)))
+# Potential Error in the computation of the p-value is -1.226006e-13.
+probability <- Fz + edgeworth.approx.error
+@
 
   \item Compute the error for $t$ statistics from -10 to 10 and plot a line
   that shows the error across $t$. Continue to use the skewness and 
   the sample size for the zebra finch further data.
+<<plot1,echo=TRUE, message=FALSE, warning=FALSE>>=  
+### Part B ###
+t.values <- seq(-10,10, length = 1000)
+fz2 <- dnorm(t.values)
 
+error.vals <- (skewness/sqrt(n)) * (((2*(t.values)^2 + 1)/6)*(fz2))
+
+error.tvals <- tibble(
+  t = t.values,
+  error = error.vals
+)
+(summary(error.tvals))
+
+error.t.plot <- ggplot()+
+  geom_line(data = error.tvals,
+            aes(x = t, y = error),
+            color = "lightblue")+
+  theme_bw()+
+  labs(title = "Edgeworth Approximation Error",
+       x = "T Values (-10,10)",
+       y = "Error")
+@
+\begin{figure}[H]
+\begin{center}
+<<echo=FALSE, warning=FALSE, message=FALSE, fig.dim=c(5,4), fig.align='center'>>=
+error.t.plot
+@
+\caption{Edgeworth Approximation Error Across t values}
+\label{plot1} 
+\end{center}
+\end{figure}
   \item Suppose we wanted to have a tail probability within 10\% of the desired
   $\alpha=0.05$. Recall we did a left-tailed test using the further data.
   How large of a sample size would we need? That is, we need
@@ -49,10 +105,20 @@ for the the further observations.
   \[0.10 \alpha  \stackrel{set}{=} \underbrace{\frac{\text{skew}}{\sqrt{n}} \frac{(2t^2+1)}{6} f_Z(t)}_{\textrm{error}},\]
   which yields
   \[ n = \left(\frac{\text{skew}}{6(0.10\alpha)} (2t^2 + 1) f_Z(t)\right)^2.\]
+<<echo=TRUE, message=FALSE, warning=FALSE>>=
+### Part C ### - error in the rejection region
+skewness <- skewness(further)
+tval <- qnorm(0.05)
+fz3 <- dnorm(tval)
+
+(min.n <- ((skewness/(6*(0.10*0.05))) * (2*tval^2 + 1) *fz3)^2)
+@
+We would need a sample size of n = 520.8876. 
+  
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Question 3
+% Question 2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \item Complete the following steps to revisit the analyses from lab 11 using the
@@ -68,8 +134,119 @@ sampling distribution of the $T$ statistic:
   resamples shifted to ensure they are consistent with the null hypotheses at the average 
   (i.e., here ensure the shifted resamples are 0 on average, corresponding
   to $t=0$, for each case). 
+<<echo=TRUE, message=FALSE, warning=FALSE>>=
+library(boot)
+### Part A ###
+
+# Closer Resamples
+R <- 10000
+s.closer <- sd(dat.finches$closer)
+n.closer <- length(dat.finches$closer)
+resamples.closer <-  tibble(tstat=rep(NA, R),
+                            xbar=rep(NA, R))
+for(i in 1:R){
+  curr.resample <- sample(x = dat.finches$closer,
+                          size = n.closer,
+                          replace = T)
+  resamples.closer$tstat[i] <- (mean(curr.resample)-0)/(s.closer/sqrt(n.closer))
+  resamples.closer$xbar[i] <- mean(curr.resample)
+}
+# shift so H0 is true
+delta.closer <- mean(resamples.closer$tstat) - 0 # null mu0 = 0
+
+resamples.null.closer <- resamples.closer |>
+  mutate(tstat.shifted = tstat - delta.closer)
+
+(mean(resamples.null.closer$tstat.shifted))
+
+# Further Resamples
+R <- 10000
+s.further <- sd(dat.finches$further)
+n.further <- length(dat.finches$further)
+resamples.further <- tibble(tstat=rep(NA, R),
+                            xbar=rep(NA, R))
+for(i in 1:R){
+  curr.resample <- sample(x = dat.finches$further,
+                          size = n.further,
+                          replace = T)
+  resamples.further$tstat[i] <- (mean(curr.resample)-0)/(s.further/sqrt(n.further))
+  resamples.further$xbar[i] <- mean(curr.resample)
+}
+# shift so H0 is true
+delta.further <- mean(resamples.further$tstat) - 0 # null mu0 = 0
+resamples.null.further <- resamples.further |>
+  mutate(tstat.shifted = tstat - delta.further)
+
+(mean(resamples.null.further$tstat.shifted))
+
+# Difference Resamples
+R <- 10000
+s.diff <- sd(dat.finches$diff)
+n.diff <- length(dat.finches$diff)
+resamples.diff <-  tibble(tstat=rep(NA, R),
+                          xbar=rep(NA, R))
+for(i in 1:R){
+  curr.resample <- sample(x = dat.finches$diff,
+                          size = n.diff,
+                          replace = T)
+  resamples.diff$tstat[i] <- (mean(curr.resample)-0)/(s.diff/sqrt(n.diff))
+  resamples.diff$xbar[i] <- mean(curr.resample)
+}
+# shift so H0 is true
+delta.diff <- mean(resamples.diff$tstat) - 0 # null mu0 = 0
+resamples.null.diff <- resamples.diff |>
+  mutate(tstat.shifted = tstat - delta.diff)
+
+(mean(resamples.null.diff$tstat.shifted))
+@
+  
   \item Compute the bootstrap $p$-value for each test using the shifted resamples. 
   How do these compare to the $t$-test $p$-values?
+<<echo=TRUE, message=FALSE, warning=FALSE>>=
+################# Part B ###################
+## Closer ##
+# Bootstrap P-Value
+p.boot.closer <- mean(resamples.null.closer$tstat.shifted >= delta.closer)
+# T-Test P-Value
+p.t.closer <- t.test(dat.finches$closer,
+                     mu = 0,
+                     alternative = "greater")
+p.t.closer <- p.t.closer$p.value
+
+## Further ##
+# Bootstrap P-Value
+p.boot.further <- mean(resamples.null.further$tstat.shifted <= delta.further)
+# T-Test P-Value
+p.t.further <- t.test(dat.finches$further,
+                      mu = 0,
+                      alternative = "less")
+p.t.further <- p.t.further$p.value
+
+## Difference ##
+# Bootstrap P-Value
+low <- 0 - delta.diff
+high <- 0 + delta.diff
+p.low <- mean(resamples.null.diff$tstat.shifted <= low)
+p.high <- mean(resamples.null.diff$tstat.shifted >= high)
+p.boot.diff <- p.low + p.high
+# T-Test P-Value
+p.t.diff <- t.test(dat.finches$diff,
+                   mu = 0,
+                   alternative = "two.sided")
+p.t.diff <- p.t.diff$p.value
+
+comparison.pvals <- tibble(
+  Data = c("Closer", "Further", "Difference"),
+  `Bootstrap P-value` = c(p.boot.closer,
+                          p.boot.further,
+                          p.boot.diff),
+  `T-Test P-value` = c(p.t.closer,
+                       p.t.further,
+                       p.t.diff)
+)
+view(comparison.pvals)
+@
+
     \item What is the 5$^{th}$ percentile of the shifted resamples under the null hypothesis? 
   Note this value approximates $t_{0.05, n-1}$. Compare these values in each case.
   \item Compute the bootstrap confidence intervals using the resamples. How do these 

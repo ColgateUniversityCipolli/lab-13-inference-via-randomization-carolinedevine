@@ -1,0 +1,353 @@
+\documentclass{article}\usepackage[]{graphicx}\usepackage[]{xcolor}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlsng}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hldef}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage[margin=1.0in]{geometry} % To set margins
+\usepackage{amsmath}  % This allows me to use the align functionality.
+                      % If you find yourself trying to replicate
+                      % something you found online, ensure you're
+                      % loading the necessary packages!
+\usepackage{amsfonts} % Math font
+\usepackage{fancyvrb}
+\usepackage{hyperref} % For including hyperlinks
+\usepackage[shortlabels]{enumitem}% For enumerated lists with labels specified
+                                  % We had to run tlmgr_install("enumitem") in R
+\usepackage{float}    % For telling R where to put a table/figure
+\usepackage{natbib}        %For the bibliography
+\bibliographystyle{apalike}%For the bibliography
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+
+\begin{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Question 1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item When conducting the work of Lab 11, we conducted the test that uses the
+Central Limit Theorem even though the sample size was ``small" (i.e., $n<30$).
+It turns out, that how ``far off" the $t$-test is can be computed using
+a first-order Edgeworth approximation for the error. Below, we will do this 
+for the the further observations.
+\begin{enumerate}
+  \item \cite{Boos00} note that 
+  \begin{align*}
+    P(T \leq t) \approx F_Z(t) + \underbrace{\frac{\text{skew}}{\sqrt{n}} \frac{(2t^2+1)}{6} f_Z(t)}_{\textrm{error}},
+  \end{align*}
+  where $f_Z(\cdot)$ and $F_Z(\cdot)$ are the Gaussian PDF and CDF and skew is the
+  skewness of the data. What is the potential error in the computation of the 
+  $p$-value when testing $H_0: \mu_X=0; H_a: \mu_X<0$ using the zebra finch further data? 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hldef{(tidyverse)}
+\hlkwd{library}\hldef{(xtable)}
+\hlkwd{library}\hldef{(VGAM)}
+\hlkwd{library}\hldef{(e1071)}
+\hlkwd{library}\hldef{(pwr)}
+\hlkwd{library}\hldef{(effectsize)}
+\hlcom{### Part A ### -> using further observations}
+\hldef{dat.finches} \hlkwb{<-} \hlkwd{read.csv}\hldef{(}\hlsng{"zebrafinches.csv"}\hldef{)}
+
+\hldef{further} \hlkwb{<-} \hldef{dat.finches}\hlopt{$}\hldef{further}
+\hldef{mu0} \hlkwb{<-} \hlnum{0}
+\hldef{t.further} \hlkwb{<-} \hlkwd{t.test}\hldef{(further,}
+                    \hlkwc{mu} \hldef{= mu0,}
+                    \hlkwc{alternative} \hldef{=} \hlsng{"less"}\hldef{)}
+\hldef{t.stat.further} \hlkwb{<-} \hldef{t.further}\hlopt{$}\hldef{statistic}
+\hldef{n} \hlkwb{<-} \hlkwd{length}\hldef{(further)}
+\hldef{skewness} \hlkwb{<-} \hlkwd{skewness}\hldef{(further)}
+\hldef{fz} \hlkwb{<-} \hlkwd{dnorm}\hldef{(t.stat.further)}
+\hldef{Fz} \hlkwb{<-} \hlkwd{pnorm}\hldef{(t.stat.further)}
+
+\hldef{(edgeworth.approx.error} \hlkwb{<-} \hldef{(skewness}\hlopt{/}\hlkwd{sqrt}\hldef{(n))} \hlopt{*}
+    \hldef{(((}\hlnum{2}\hlopt{*}\hldef{(t.stat.further)}\hlopt{^}\hlnum{2} \hlopt{+} \hlnum{1}\hldef{)}\hlopt{/}\hlnum{6}\hldef{)}\hlopt{*}\hldef{(fz)))}
+\end{alltt}
+\begin{verbatim}
+##             t 
+## -1.226006e-13
+\end{verbatim}
+\begin{alltt}
+\hlcom{# Potential Error in the computation of the p-value is -1.226006e-13.}
+\hldef{probability} \hlkwb{<-} \hldef{Fz} \hlopt{+} \hldef{edgeworth.approx.error}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+  \item Compute the error for $t$ statistics from -10 to 10 and plot a line
+  that shows the error across $t$. Continue to use the skewness and 
+  the sample size for the zebra finch further data.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{### Part B ###}
+\hldef{t.values} \hlkwb{<-} \hlkwd{seq}\hldef{(}\hlopt{-}\hlnum{10}\hldef{,}\hlnum{10}\hldef{,} \hlkwc{length} \hldef{=} \hlnum{1000}\hldef{)}
+\hldef{fz2} \hlkwb{<-} \hlkwd{dnorm}\hldef{(t.values)}
+
+\hldef{error.vals} \hlkwb{<-} \hldef{(skewness}\hlopt{/}\hlkwd{sqrt}\hldef{(n))} \hlopt{*} \hldef{(((}\hlnum{2}\hlopt{*}\hldef{(t.values)}\hlopt{^}\hlnum{2} \hlopt{+} \hlnum{1}\hldef{)}\hlopt{/}\hlnum{6}\hldef{)}\hlopt{*}\hldef{(fz2))}
+
+\hldef{error.tvals} \hlkwb{<-} \hlkwd{tibble}\hldef{(}
+  \hlkwc{t} \hldef{= t.values,}
+  \hlkwc{error} \hldef{= error.vals}
+\hldef{)}
+\hldef{(}\hlkwd{summary}\hldef{(error.tvals))}
+\end{alltt}
+\begin{verbatim}
+##        t           error           
+##  Min.   :-10   Min.   :-2.602e-02  
+##  1st Qu.: -5   1st Qu.:-8.061e-03  
+##  Median :  0   Median :-2.560e-06  
+##  Mean   :  0   Mean   :-5.172e-03  
+##  3rd Qu.:  5   3rd Qu.: 0.000e+00  
+##  Max.   : 10   Max.   : 0.000e+00
+\end{verbatim}
+\begin{alltt}
+\hldef{error.t.plot} \hlkwb{<-} \hlkwd{ggplot}\hldef{()}\hlopt{+}
+  \hlkwd{geom_line}\hldef{(}\hlkwc{data} \hldef{= error.tvals,}
+            \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{y} \hldef{= error),}
+            \hlkwc{color} \hldef{=} \hlsng{"lightblue"}\hldef{)}\hlopt{+}
+  \hlkwd{theme_bw}\hldef{()}\hlopt{+}
+  \hlkwd{labs}\hldef{(}\hlkwc{title} \hldef{=} \hlsng{"Edgeworth Approximation Error"}\hldef{,}
+       \hlkwc{x} \hldef{=} \hlsng{"T Values (-10,10)"}\hldef{,}
+       \hlkwc{y} \hldef{=} \hlsng{"Error"}\hldef{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\begin{figure}[H]
+\begin{center}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/unnamed-chunk-3-1} 
+
+}
+
+
+\end{knitrout}
+\caption{Edgeworth Approximation Error Across t values}
+\label{plot1} 
+\end{center}
+\end{figure}
+  \item Suppose we wanted to have a tail probability within 10\% of the desired
+  $\alpha=0.05$. Recall we did a left-tailed test using the further data.
+  How large of a sample size would we need? That is, we need
+  to solve the error formula equal to 10\% of the desired left-tail probability:
+  \[0.10 \alpha  \stackrel{set}{=} \underbrace{\frac{\text{skew}}{\sqrt{n}} \frac{(2t^2+1)}{6} f_Z(t)}_{\textrm{error}},\]
+  which yields
+  \[ n = \left(\frac{\text{skew}}{6(0.10\alpha)} (2t^2 + 1) f_Z(t)\right)^2.\]
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{### Part C ### - error in the rejection region}
+\hldef{skewness} \hlkwb{<-} \hlkwd{skewness}\hldef{(further)}
+\hldef{tval} \hlkwb{<-} \hlkwd{qnorm}\hldef{(}\hlnum{0.05}\hldef{)}
+\hldef{fz3} \hlkwb{<-} \hlkwd{dnorm}\hldef{(tval)}
+
+\hldef{(min.n} \hlkwb{<-} \hldef{((skewness}\hlopt{/}\hldef{(}\hlnum{6}\hlopt{*}\hldef{(}\hlnum{0.10}\hlopt{*}\hlnum{0.05}\hldef{)))} \hlopt{*} \hldef{(}\hlnum{2}\hlopt{*}\hldef{tval}\hlopt{^}\hlnum{2} \hlopt{+} \hlnum{1}\hldef{)} \hlopt{*}\hldef{fz3)}\hlopt{^}\hlnum{2}\hldef{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 520.8876
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+We would need a sample size of n = 520.8876. 
+  
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Question 2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item Complete the following steps to revisit the analyses from lab 11 using the
+bootstrap procedure.
+\begin{enumerate}
+\item Now, consider the zebra finch data. We do not know the generating distributions
+for the closer, further, and difference data, so perform resampling to approximate the 
+sampling distribution of the $T$ statistic:
+  \[T = \frac{\bar{x}_r - 0}{s/\sqrt{n}},\]
+  where $\bar{x}_r$ is the mean computed on the r$^{th}$ resample and $s$ is the
+  sample standard deviation from the original samples. At the end, create an
+  object called \texttt{resamples.null.closer}, for example, and store the 
+  resamples shifted to ensure they are consistent with the null hypotheses at the average 
+  (i.e., here ensure the shifted resamples are 0 on average, corresponding
+  to $t=0$, for each case). 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hldef{(boot)}
+\hlcom{### Part A ###}
+
+\hlcom{# Closer Resamples}
+\hldef{R} \hlkwb{<-} \hlnum{10000}
+\hldef{s.closer} \hlkwb{<-} \hlkwd{sd}\hldef{(dat.finches}\hlopt{$}\hldef{closer)}
+\hldef{n.closer} \hlkwb{<-} \hlkwd{length}\hldef{(dat.finches}\hlopt{$}\hldef{closer)}
+\hldef{resamples.closer} \hlkwb{<-}  \hlkwd{tibble}\hldef{(}\hlkwc{tstat}\hldef{=}\hlkwd{rep}\hldef{(}\hlnum{NA}\hldef{, R),}
+                            \hlkwc{xbar}\hldef{=}\hlkwd{rep}\hldef{(}\hlnum{NA}\hldef{, R))}
+\hlkwa{for}\hldef{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hldef{R)\{}
+  \hldef{curr.resample} \hlkwb{<-} \hlkwd{sample}\hldef{(}\hlkwc{x} \hldef{= dat.finches}\hlopt{$}\hldef{closer,}
+                          \hlkwc{size} \hldef{= n.closer,}
+                          \hlkwc{replace} \hldef{= T)}
+  \hldef{resamples.closer}\hlopt{$}\hldef{tstat[i]} \hlkwb{<-} \hldef{(}\hlkwd{mean}\hldef{(curr.resample)}\hlopt{-}\hlnum{0}\hldef{)}\hlopt{/}\hldef{(s.closer}\hlopt{/}\hlkwd{sqrt}\hldef{(n.closer))}
+  \hldef{resamples.closer}\hlopt{$}\hldef{xbar[i]} \hlkwb{<-} \hlkwd{mean}\hldef{(curr.resample)}
+\hldef{\}}
+\hlcom{# shift so H0 is true}
+\hldef{delta.closer} \hlkwb{<-} \hlkwd{mean}\hldef{(resamples.closer}\hlopt{$}\hldef{tstat)} \hlopt{-} \hlnum{0} \hlcom{# null mu0 = 0}
+
+\hldef{resamples.null.closer} \hlkwb{<-} \hldef{resamples.closer |>}
+  \hlkwd{mutate}\hldef{(}\hlkwc{tstat.shifted} \hldef{= tstat} \hlopt{-} \hldef{delta.closer)}
+
+\hldef{(}\hlkwd{mean}\hldef{(resamples.null.closer}\hlopt{$}\hldef{tstat.shifted))}
+\end{alltt}
+\begin{verbatim}
+## [1] 8.914758e-16
+\end{verbatim}
+\begin{alltt}
+\hlcom{# Further Resamples}
+\hldef{R} \hlkwb{<-} \hlnum{10000}
+\hldef{s.further} \hlkwb{<-} \hlkwd{sd}\hldef{(dat.finches}\hlopt{$}\hldef{further)}
+\hldef{n.further} \hlkwb{<-} \hlkwd{length}\hldef{(dat.finches}\hlopt{$}\hldef{further)}
+\hldef{resamples.further} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{tstat}\hldef{=}\hlkwd{rep}\hldef{(}\hlnum{NA}\hldef{, R),}
+                            \hlkwc{xbar}\hldef{=}\hlkwd{rep}\hldef{(}\hlnum{NA}\hldef{, R))}
+\hlkwa{for}\hldef{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hldef{R)\{}
+  \hldef{curr.resample} \hlkwb{<-} \hlkwd{sample}\hldef{(}\hlkwc{x} \hldef{= dat.finches}\hlopt{$}\hldef{further,}
+                          \hlkwc{size} \hldef{= n.further,}
+                          \hlkwc{replace} \hldef{= T)}
+  \hldef{resamples.further}\hlopt{$}\hldef{tstat[i]} \hlkwb{<-} \hldef{(}\hlkwd{mean}\hldef{(curr.resample)}\hlopt{-}\hlnum{0}\hldef{)}\hlopt{/}\hldef{(s.further}\hlopt{/}\hlkwd{sqrt}\hldef{(n.further))}
+  \hldef{resamples.further}\hlopt{$}\hldef{xbar[i]} \hlkwb{<-} \hlkwd{mean}\hldef{(curr.resample)}
+\hldef{\}}
+\hlcom{# shift so H0 is true}
+\hldef{delta.further} \hlkwb{<-} \hlkwd{mean}\hldef{(resamples.further}\hlopt{$}\hldef{tstat)} \hlopt{-} \hlnum{0} \hlcom{# null mu0 = 0}
+\hldef{resamples.null.further} \hlkwb{<-} \hldef{resamples.further |>}
+  \hlkwd{mutate}\hldef{(}\hlkwc{tstat.shifted} \hldef{= tstat} \hlopt{-} \hldef{delta.further)}
+
+\hldef{(}\hlkwd{mean}\hldef{(resamples.null.further}\hlopt{$}\hldef{tstat.shifted))}
+\end{alltt}
+\begin{verbatim}
+## [1] -1.207923e-17
+\end{verbatim}
+\begin{alltt}
+\hlcom{# Difference Resamples}
+\hldef{R} \hlkwb{<-} \hlnum{10000}
+\hldef{s.diff} \hlkwb{<-} \hlkwd{sd}\hldef{(dat.finches}\hlopt{$}\hldef{diff)}
+\hldef{n.diff} \hlkwb{<-} \hlkwd{length}\hldef{(dat.finches}\hlopt{$}\hldef{diff)}
+\hldef{resamples.diff} \hlkwb{<-}  \hlkwd{tibble}\hldef{(}\hlkwc{tstat}\hldef{=}\hlkwd{rep}\hldef{(}\hlnum{NA}\hldef{, R),}
+                          \hlkwc{xbar}\hldef{=}\hlkwd{rep}\hldef{(}\hlnum{NA}\hldef{, R))}
+\hlkwa{for}\hldef{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hldef{R)\{}
+  \hldef{curr.resample} \hlkwb{<-} \hlkwd{sample}\hldef{(}\hlkwc{x} \hldef{= dat.finches}\hlopt{$}\hldef{diff,}
+                          \hlkwc{size} \hldef{= n.diff,}
+                          \hlkwc{replace} \hldef{= T)}
+  \hldef{resamples.diff}\hlopt{$}\hldef{tstat[i]} \hlkwb{<-} \hldef{(}\hlkwd{mean}\hldef{(curr.resample)}\hlopt{-}\hlnum{0}\hldef{)}\hlopt{/}\hldef{(s.diff}\hlopt{/}\hlkwd{sqrt}\hldef{(n.diff))}
+  \hldef{resamples.diff}\hlopt{$}\hldef{xbar[i]} \hlkwb{<-} \hlkwd{mean}\hldef{(curr.resample)}
+\hldef{\}}
+\hlcom{# shift so H0 is true}
+\hldef{delta.diff} \hlkwb{<-} \hlkwd{mean}\hldef{(resamples.diff}\hlopt{$}\hldef{tstat)} \hlopt{-} \hlnum{0} \hlcom{# null mu0 = 0}
+\hldef{resamples.null.diff} \hlkwb{<-} \hldef{resamples.diff |>}
+  \hlkwd{mutate}\hldef{(}\hlkwc{tstat.shifted} \hldef{= tstat} \hlopt{-} \hldef{delta.diff)}
+
+\hldef{(}\hlkwd{mean}\hldef{(resamples.null.diff}\hlopt{$}\hldef{tstat.shifted))}
+\end{alltt}
+\begin{verbatim}
+## [1] -8.820833e-16
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+  
+  \item Compute the bootstrap $p$-value for each test using the shifted resamples. 
+  How do these compare to the $t$-test $p$-values?
+    \item What is the 5$^{th}$ percentile of the shifted resamples under the null hypothesis? 
+  Note this value approximates $t_{0.05, n-1}$. Compare these values in each case.
+  \item Compute the bootstrap confidence intervals using the resamples. How do these 
+  compare to the $t$-test confidence intervals?
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Question 4
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item Complete the following steps to revisit the analyses from lab 11 using the
+randomization procedure.
+\begin{enumerate}
+\item Now, consider the zebra finch data. We do not know the generating distributions
+for the closer, further, and difference data, so perform the randomization procedure
+  \item Compute the randomization test $p$-value for each test.
+  \item Compute the randomization confidence interval by iterating over values of $\mu_0$.\\
+  \textbf{Hint:} You can ``search" for the lower bound from $Q_1$ and subtracting by 0.0001, 
+  and the upper bound using $Q_3$ and increasing by 0.0001. You will continue until you find 
+  the first value for which the two-sided $p$-value is greater than or equal to 0.05.
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Optional Question
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item \textbf{Optional Challenge:} In this lab, you performed resampling to 
+approximate the sampling distribution of the $T$ statistic using
+\[T = \frac{\bar{x}_r - 0}{s/\sqrt{n}}.\]
+I'm curious whether it is better/worse/similar if we computed the statistics
+using the sample standard deviation of the resamples ($s_r$), instead of the 
+original sample ($s$)
+  \[T = \frac{\bar{x}_r - 0}{s_r/\sqrt{n}}.\]
+\begin{enumerate}
+  \item Perform a simulation study to evaluate the Type I error for conducting this
+hypothesis test both ways.
+  \item Using the same test case(s) as part (a), compute bootstrap confidence 
+  intervals and assess their coverage -- how often do we `capture' the parameter
+of interest?
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% End Document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{enumerate}
+\bibliography{bibliography}
+\end{document}
+
