@@ -248,7 +248,7 @@ sampling distribution of the $T$ statistic:
 \hldef{(}\hlkwd{mean}\hldef{(resamples.null.closer}\hlopt{$}\hldef{tstat.shifted))}
 \end{alltt}
 \begin{verbatim}
-## [1] 7.819495e-16
+## [1] -8.652634e-16
 \end{verbatim}
 \begin{alltt}
 \hlcom{# Further Resamples}
@@ -272,7 +272,7 @@ sampling distribution of the $T$ statistic:
 \hldef{(}\hlkwd{mean}\hldef{(resamples.null.further}\hlopt{$}\hldef{tstat.shifted))}
 \end{alltt}
 \begin{verbatim}
-## [1] 2.557732e-16
+## [1] 2.546963e-16
 \end{verbatim}
 \begin{alltt}
 \hlcom{# Difference Resamples}
@@ -296,7 +296,7 @@ sampling distribution of the $T$ statistic:
 \hldef{(}\hlkwd{mean}\hldef{(resamples.null.diff}\hlopt{$}\hldef{tstat.shifted))}
 \end{alltt}
 \begin{verbatim}
-## [1] -3.541167e-16
+## [1] -3.933298e-16
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -354,7 +354,7 @@ We were asked to preform resampling across the closer, further, and difference d
 \end{kframe}
 \end{knitrout}
 % latex table generated in R 4.4.2 by xtable 1.8-4 package
-% Thu May  1 15:12:37 2025
+% Thu May  1 15:25:12 2025
 \begin{table}[H]
 \centering
 \begingroup\small
@@ -372,6 +372,7 @@ Closer & 0.00 & 0.00 \\
 \label{tab:bootpcomp}
 \end{table}
 
+The table above shows the comparison of the bootstrap p-values versus the t-test p-values. For all three cases, the bootstrap test shows p-values of 0 and the t-test shows similar (essentially 0).
     \item What is the 5$^{th}$ percentile of the shifted resamples under the null hypothesis? 
   Note this value approximates $t_{0.05, n-1}$. Compare these values in each case.
 \begin{knitrout}
@@ -407,7 +408,7 @@ Closer & 0.00 & 0.00 \\
 \end{kframe}
 \end{knitrout}
 % latex table generated in R 4.4.2 by xtable 1.8-4 package
-% Thu May  1 15:12:37 2025
+% Thu May  1 15:25:12 2025
 \begin{table}[H]
 \centering
 \begingroup\small
@@ -415,9 +416,9 @@ Closer & 0.00 & 0.00 \\
   \hline
 Data & Bootstrap Percentile & T-Test Percentile \\ 
   \hline
-Closer & -1.56 & -1.71 \\ 
-  Further & -1.66 & -1.71 \\ 
-  Difference & -1.58 & -1.71 \\ 
+Closer & -1.58 & -1.71 \\ 
+  Further & -1.68 & -1.71 \\ 
+  Difference & -1.57 & -1.71 \\ 
    \hline
 \end{tabular}
 \endgroup
@@ -425,6 +426,7 @@ Closer & -1.56 & -1.71 \\
 \label{tab:bootperccomp}
 \end{table}
 
+The 5th percentile of the shifted resamples under the null hypothesis are: closer case = -1.59, further case: -1.69, and difference case = -1.54. In comparison to the t-test 5th percentile which is -1.71 for all three cases, they are very similar with small variations due to sampling variability. 
   \item Compute the bootstrap confidence intervals using the resamples. How do these 
   compare to the $t$-test confidence intervals?
 \begin{knitrout}
@@ -438,7 +440,7 @@ Closer & -1.56 & -1.71 \\
 \end{alltt}
 \begin{verbatim}
 ##      2.5%     97.5% 
-## 0.1214700 0.1922559
+## 0.1211670 0.1938548
 \end{verbatim}
 \begin{alltt}
 \hldef{CI.t.closer} \hlkwb{<-} \hlkwd{t.test}\hldef{(}\hlkwc{x}\hldef{=dat.finches}\hlopt{$}\hldef{closer,} \hlkwc{mu} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{conf.level} \hldef{=} \hlnum{0.95}\hldef{,} \hlkwc{alternative} \hldef{=} \hlsng{"two.sided"}\hldef{)}
@@ -455,7 +457,7 @@ Closer & -1.56 & -1.71 \\
 \end{alltt}
 \begin{verbatim}
 ##       2.5%      97.5% 
-## -0.2548966 -0.1568618
+## -0.2565610 -0.1557908
 \end{verbatim}
 \begin{alltt}
 \hldef{CI.t.further} \hlkwb{<-} \hlkwd{t.test}\hldef{(}\hlkwc{x}\hldef{=dat.finches}\hlopt{$}\hldef{further,} \hlkwc{mu} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{conf.level} \hldef{=} \hlnum{0.95}\hldef{,} \hlkwc{alternative} \hldef{=} \hlsng{"two.sided"}\hldef{)}
@@ -472,7 +474,7 @@ Closer & -1.56 & -1.71 \\
 \end{alltt}
 \begin{verbatim}
 ##      2.5%     97.5% 
-## 0.2797737 0.4419639
+## 0.2815590 0.4436647
 \end{verbatim}
 \begin{alltt}
 \hldef{CI.t.diff} \hlkwb{<-} \hlkwd{t.test}\hldef{(}\hlkwc{x}\hldef{=dat.finches}\hlopt{$}\hldef{diff,} \hlkwc{mu} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{conf.level} \hldef{=} \hlnum{0.95}\hldef{,} \hlkwc{alternative} \hldef{=} \hlsng{"two.sided"}\hldef{)}
@@ -485,7 +487,20 @@ Closer & -1.56 & -1.71 \\
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-  
+The bootstrap confidence intervals using resamples in comparison to the t-test confidence intervals are:
+Closer:
+- Bootstrap : (0.1203, 0.1934)
+- T-Test : (0.1174, 0.1951)
+
+Further:
+- Bootstrap : (–0.2559, –0.1559)
+- T-Test : (–0.2565, –0.1489)
+
+Difference:
+- Bootstrap : (0.2820, 0.4451)
+- T-Test : (0.2719, 0.4460)
+
+The intervals are very similar. Note: the bootstrap intervals were computed manually so there might be slight bias. BCa bootstrap would be a way to bias-correct the intervals. 
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
