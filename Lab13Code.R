@@ -213,6 +213,7 @@ CI.t.diff <- t.test(x=dat.finches$diff, mu = 0, conf.level = 0.95, alternative =
 CI.t.diff <- CI.t.diff$conf.int
 
 
+
 ################################################################################
 # Question 3: Randomization Test
 ################################################################################
@@ -409,8 +410,6 @@ further.rand.CI <- c(mu.lower.further, mu.upper.further)
 ################################################################################
 # Diff (#3)
 ################################################################################
-
-# part a
 # We need to preform randomization procedure.
 mu0 <- 0
 R <- 10000
@@ -511,6 +510,6 @@ repeat{
   }
 }
 
-c(mu.lower.diff, mu.upper.diff)
+diff.rand.CI <- c(mu.lower.diff, mu.upper.diff)
 
 

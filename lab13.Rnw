@@ -63,7 +63,7 @@ Fz <- pnorm(t.stat.further)
 # Potential Error in the computation of the p-value is -1.226006e-13.
 probability <- Fz + edgeworth.approx.error
 @
-
+We found the Edgeworth approximation error to be -1.226006e-13 which is very close to 0. This means that the t-test is not "far-off" due to the potential error in the computation of the p-value when testing the hypotheses for the further data being so low. 
   \item Compute the error for $t$ statistics from -10 to 10 and plot a line
   that shows the error across $t$. Continue to use the skewness and 
   the sample size for the zebra finch further data.
@@ -98,6 +98,7 @@ error.t.plot
 \label{plot1} 
 \end{center}
 \end{figure}
+For the error across the t-values from -10 to 10, we can see that the maximum error is essentially 0 with the median being around -2.56e-06 at around t=0. 
   \item Suppose we wanted to have a tail probability within 10\% of the desired
   $\alpha=0.05$. Recall we did a left-tailed test using the further data.
   How large of a sample size would we need? That is, we need
@@ -113,7 +114,7 @@ fz3 <- dnorm(tval)
 
 (min.n <- ((skewness/(6*(0.10*0.05))) * (2*tval^2 + 1) *fz3)^2)
 @
-We would need a sample size of n = 520.8876. 
+We would need a sample size of n = 520.8876 for a left-tailed test. This is much larger than the current n.  
   
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -199,7 +200,7 @@ resamples.null.diff <- resamples.diff |>
 
 (mean(resamples.null.diff$tstat.shifted))
 @
-  
+We were asked to preform resampling across the closer, further, and difference data because we do not know the generating distributions for them. We use resampling to approximate the sampling distribution of the T statistic. For all three data sets, the shifted resamples are close to 0 on average which corresponds to t = 0 for each case. This ensures that the resamples shifted are consistent with the null hypothesis at the average.   
   \item Compute the bootstrap $p$-value for each test using the shifted resamples. 
   How do these compare to the $t$-test $p$-values?
 <<echo=TRUE, message=FALSE, warning=FALSE>>=
@@ -244,17 +245,80 @@ comparison.pvals <- tibble(
                        p.t.further,
                        p.t.diff)
 )
-view(comparison.pvals)
+comparison.pvals.1 <- xtable(comparison.pvals,
+       caption = "Comparing Bootstrap p-values to t-test p-values",
+       label = "tab:bootpcomp")
 @
-
+<<echo=FALSE, eval=TRUE, results="asis">>=
+print(comparison.pvals.1,
+      table.placement = "H", 
+      include.rownames = FALSE, 
+      size = "small", 
+      caption.placement = "bottom")
+@
     \item What is the 5$^{th}$ percentile of the shifted resamples under the null hypothesis? 
   Note this value approximates $t_{0.05, n-1}$. Compare these values in each case.
+<<echo=TRUE, message=FALSE, warning=FALSE>>=
+################# Part C ###################
+# Want to use shifted t stat for the p-value
+#Closer
+percentile.boot.closer <- quantile(resamples.null.closer$tstat.shifted, 0.05)
+percentile.t.closer <- qt(0.05, df = n.closer -1)
+
+#Further
+percentile.boot.further <- quantile(resamples.null.further$tstat.shifted, 0.05)
+percentile.t.further <- qt(0.05, df = n.further -1)
+
+#Difference
+percentile.boot.diff <- quantile(resamples.null.diff$tstat.shifted, 0.05)
+percentile.t.diff <- qt(0.05, df = n.diff -1)
+
+comparison.percentile <- tibble(
+  Data = c("Closer", "Further", "Difference"),
+  `Bootstrap Percentile` = c(percentile.boot.closer,
+                             percentile.boot.further,
+                             percentile.boot.diff),
+  `T-Test Percentile` = c(percentile.t.closer,
+                          percentile.t.further,
+                          percentile.t.diff)
+)
+comparison.percent.1 <- xtable(comparison.percentile,
+       caption = "Comparing Bootstrap percentiles to t-test percentiles",
+       label = "tab:bootperccomp")
+@
+<<echo=FALSE, eval=TRUE, results="asis">>=
+print(comparison.percent.1,
+      table.placement = "H", 
+      include.rownames = FALSE, 
+      size = "small", 
+      caption.placement = "bottom")
+@
   \item Compute the bootstrap confidence intervals using the resamples. How do these 
   compare to the $t$-test confidence intervals?
+<<echo=TRUE, message=FALSE, warning=FALSE>>=
+# Confidence Interval
+### use resamples for boot -- need this for x bar (floruorences)
+# want to use resample x bars (not shifted) for the confidence interval
+# Closer
+(CI.boot.closer <- quantile(resamples.null.closer$xbar, c(0.025, 0.975)))
+CI.t.closer <- t.test(x=dat.finches$closer, mu = 0, conf.level = 0.95, alternative = "two.sided")
+(CI.t.closer <- CI.t.closer$conf.int)
+
+# Further
+(CI.boot.further <- quantile(resamples.null.further$xbar, c(0.025, 0.975)))
+CI.t.further <- t.test(x=dat.finches$further, mu = 0, conf.level = 0.95, alternative = "two.sided")
+(CI.t.further <- CI.t.further$conf.int)
+
+# Diff
+(CI.boot.diff <- quantile(resamples.null.diff$xbar, c(0.025, 0.975)))
+CI.t.diff <- t.test(x=dat.finches$diff, mu = 0, conf.level = 0.95, alternative = "two.sided")
+(CI.t.diff <- CI.t.diff$conf.int)
+@
+  
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Question 4
+% Question 3
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \item Complete the following steps to revisit the analyses from lab 11 using the
@@ -262,11 +326,310 @@ randomization procedure.
 \begin{enumerate}
 \item Now, consider the zebra finch data. We do not know the generating distributions
 for the closer, further, and difference data, so perform the randomization procedure
+<<echo=TRUE, message=FALSE, warning=FALSE>>=
+################################################################################
+# Closer (#3)
+################################################################################# 
+#Since we do not know the generating distribution for 
+# closer, further, and difference data, 
+# we need to preform randomization procedure.
+mu0 <- 0
+R <- 10000
+rand.closer <- tibble(xbars = rep(NA, R))
+
+# PREPROCESSING: shift the data to be mean 0 under H0
+x.shift.closer <- dat.finches$closer - mu0
+# RANDOMIZE / SHUFFLE
+for(i in 1:R){
+  curr.rand <- x.shift.closer *
+    sample(x = c(-1, 1),
+           size = length(x.shift.closer),
+           replace = T)
+  
+  rand.closer$xbars[i] <- mean(curr.rand)
+}
+rand.closer <- rand.closer |>
+  mutate(xbars = xbars + mu0) # shifting back
+
+################################################################################
+# Further (#3)
+################################################################################
+# We need to preform randomization procedure.
+mu0 <- 0
+R <- 10000
+rand.further <- tibble(xbars = rep(NA, R))
+
+# PREPROCESSING: shift the data to be mean 0 under H0
+x.shift.further <- dat.finches$further - mu0
+# RANDOMIZE / SHUFFLE
+for(i in 1:R){
+  curr.rand <- x.shift.further *
+    sample(x = c(-1, 1),
+           size = length(x.shift.further),
+           replace = T)
+  
+  rand.further$xbars[i] <- mean(curr.rand)
+}
+rand.further <- rand.further |>
+  mutate(xbars = xbars + mu0) # shifting back
+
+################################################################################
+# Diff (#3)
+################################################################################
+# We need to preform randomization procedure.
+mu0 <- 0
+R <- 10000
+rand.diff <- tibble(xbars = rep(NA, R))
+
+# PREPROCESSING: shift the data to be mean 0 under H0
+x.shift.diff <- dat.finches$diff - mu0
+# RANDOMIZE / SHUFFLE
+for(i in 1:R){
+  curr.rand <- x.shift.diff *
+    sample(x = c(-1, 1),
+           size = length(x.shift.diff),
+           replace = T)
+  
+  rand.diff$xbars[i] <- mean(curr.rand)
+}
+rand.diff <- rand.diff |>
+  mutate(xbars = xbars + mu0) # shifting back
+
+@
   \item Compute the randomization test $p$-value for each test.
+<<echo=TRUE, message=FALSE, warning=FALSE>>=
+# Closer 
+# p-value 
+obs.mean.closer <- mean(dat.finches$closer)
+(p.rand.closer <- mean(rand.closer$xbars >= obs.mean.closer))
+# Further
+# p-value 
+obs.mean.further <- mean(dat.finches$further)
+(p.rand.further <- mean(rand.further$xbars <= obs.mean.further))
+# Difference
+# p-value 
+delta.diff <- abs(mean(dat.finches$diff) - mu0)
+low.diff <- mu0 - delta.diff # mirror
+high.diff <- mu0 + delta.diff   # xbar
+(p.rand.diff <- mean(rand.diff$xbars <= low.diff) + 
+  mean(rand.diff$xbars >= high.diff))
+@
+
   \item Compute the randomization confidence interval by iterating over values of $\mu_0$.\\
   \textbf{Hint:} You can ``search" for the lower bound from $Q_1$ and subtracting by 0.0001, 
   and the upper bound using $Q_3$ and increasing by 0.0001. You will continue until you find 
   the first value for which the two-sided $p$-value is greater than or equal to 0.05.
+<<echo=TRUE, message=FALSE, warning=FALSE>>=
+################################################################################
+# Closer (#3)
+#################################################################################
+## Confidence Interval ##
+R <- 1000
+mu0.iterate <- 0.01
+starting.point.closer <- mean(dat.finches$closer)
+mu.lower.closer <- starting.point.closer
+repeat{
+  rand.closer <- tibble(xbars = rep(NA, R))
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.closer <- dat.finches$closer - mu.lower.closer
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.closer *
+      sample(x = c(-1, 1),
+             size = length(x.shift.closer),
+             replace = T)
+    
+    rand.closer$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.closer <- rand.closer |>
+    mutate(xbars = xbars + mu.lower.closer) # shifting back
+  
+  # p-value  (one-sided)
+  obs.mean.closer <- mean(dat.finches$closer)
+  p.val.closer <- mean(rand.closer$xbars >= obs.mean.closer)
+if(p.val.closer < 0.05){
+  break
+}else{
+  mu.lower.closer <- mu.lower.closer - mu0.iterate
+}
+}
+mu.upper.closer <- starting.point.closer
+repeat{
+  rand.closer <- tibble(xbars = rep(NA, R))
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.closer <- dat.finches$closer - mu.upper.closer
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.closer *
+      sample(x = c(-1, 1),
+             size = length(x.shift.closer),
+             replace = T)
+    
+    rand.closer$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.closer <- rand.closer |>
+    mutate(xbars = xbars + mu.upper.closer) # shifting back
+  
+  # p-value  (one-sided)
+  obs.mean.closer <- mean(dat.finches$closer)
+  p.val.closer <- mean(rand.closer$xbars <= obs.mean.closer)
+  
+  if(p.val.closer < 0.05){
+    break
+  }else{
+    mu.upper.closer <- mu.upper.closer + mu0.iterate
+  }
+}
+(closer.rand.CI <- c(mu.lower.closer, mu.upper.closer))
+################################################################################
+# Further (#3)
+#################################################################################
+## Confidence Interval ##
+R <- 1000
+mu0.iterate <- 0.01
+starting.point.further <- mean(dat.finches$further)
+
+mu.lower.further <- starting.point.further
+repeat{
+  rand.further <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.further <- dat.finches$further - mu.lower.further
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.further *
+      sample(x = c(-1, 1),
+             size = length(x.shift.further),
+             replace = T)
+    
+    rand.further$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.further <- rand.further |>
+    mutate(xbars = xbars + mu.lower.further) # shifting back
+  
+  # p-value  (one-sided)
+  obs.mean.further <- mean(dat.finches$further)
+  p.val.further <- mean(rand.further$xbars >= obs.mean.further)
+  
+  if(p.val.further < 0.05){
+    break
+  }else{
+    mu.lower.further <- mu.lower.further - mu0.iterate
+  }
+}
+
+mu.upper.further <- starting.point.further
+repeat{
+  rand.further <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.further <- dat.finches$further - mu.upper.further
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.further *
+      sample(x = c(-1, 1),
+             size = length(x.shift.further),
+             replace = T)
+    
+    rand.further$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.further <- rand.further |>
+    mutate(xbars = xbars + mu.upper.further) # shifting back
+  
+  # p-value  (one-sided)
+  obs.mean.further <- mean(dat.finches$further)
+  p.val.further <- mean(rand.further$xbars <= obs.mean.further)
+  
+  if(p.val.further < 0.05){
+    break
+  }else{
+    mu.upper.further <- mu.upper.further + mu0.iterate
+  }
+}
+
+(further.rand.CI <- c(mu.lower.further, mu.upper.further))
+
+
+################################################################################
+# Difference (#3)
+#################################################################################
+## Confidence Interval ##
+R <- 1000
+mu0.iterate <- 0.01
+starting.point.diff <- mean(dat.finches$diff)
+
+mu.lower.diff <- starting.point.diff
+repeat{
+  rand.diff <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.diff <- dat.finches$diff - mu.lower.diff
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.diff *
+      sample(x = c(-1, 1),
+             size = length(x.shift.diff),
+             replace = T)
+    
+    rand.diff$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.diff <- rand.diff |>
+    mutate(xbars = xbars + mu.lower.diff) # shifting back
+  
+  # p-value  (one-sided)
+  (delta.diff <- abs(mean(dat.finches$diff) - mu.lower.diff))
+  (low.diff <- mu.lower.diff - delta.diff) # mirror
+  (high.diff <- mu.lower.diff + delta.diff)   # xbar
+  (p.val.diff <- mean(rand.diff$xbars <= low.diff) +
+      mean(rand.diff$xbars >= high.diff))
+  
+  if(p.val.diff < 0.05){
+    break
+  }else{
+    mu.lower.diff <- mu.lower.diff - mu0.iterate
+  }
+}
+
+mu.upper.diff <- starting.point.diff
+repeat{
+  rand.diff <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift.diff <- dat.finches$diff - mu.upper.diff
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift.diff *
+      sample(x = c(-1, 1),
+             size = length(x.shift.diff),
+             replace = T)
+    
+    rand.diff$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand.diff <- rand.diff |>
+    mutate(xbars = xbars + mu.upper.diff) # shifting back
+  
+  # p-value 
+  (delta.diff <- abs(mean(dat.finches$closer) - mu.upper.diff))
+  (low.diff <- mu.upper.diff - delta.diff) # mirror
+  (high.diff <- mu.upper.diff + delta.diff)   # xbar
+  (p.val.diff <- mean(rand.closer$xbars <= low.diff) +
+      mean(rand.diff$xbars >= high.diff))
+  
+  if(p.val.diff < 0.05){
+    break
+  }else{
+    mu.upper.diff <- mu.upper.diff + mu0.iterate
+  }
+}
+
+(diff.rand.CI <- c(mu.lower.diff, mu.upper.diff))
+@  
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
