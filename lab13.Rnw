@@ -411,7 +411,7 @@ rand.diff <- rand.diff |>
   mutate(xbars = xbars + mu0) # shifting back
 
 @
-We preformed the randomization procedure which provides strong evidence to reject the null hypothesis as seen in part b of Question 3 with the p-values. 
+We preformed the randomization procedure with R = 10,000 and shuffling the data. We shifted back for interpretation purposes. This provides strong evidence to reject the null hypothesis as seen in part b of Question 3 with the p-values. 
   \item Compute the randomization test $p$-value for each test.
 <<echo=TRUE, message=FALSE, warning=FALSE>>=
 # Closer 
@@ -430,7 +430,7 @@ high.diff <- mu0 + delta.diff   # xbar
 (p.rand.diff <- mean(rand.diff$xbars <= low.diff) + 
   mean(rand.diff$xbars >= high.diff))
 @
-
+For all three cases, the p-value is exactly 0 which suggests that the closer values show that the observed mean is at the far right-tail of its null distribution, the further values show that the observed mean is at the far left-tail of its null distribution, and the difference values, using a two-sided test, show both of the tails on the extreme ends of the null distribution. This shows that the p-values (p = 0) for all three cases indicate evidence to reject the null hypothesis.
   \item Compute the randomization confidence interval by iterating over values of $\mu_0$.\\
   \textbf{Hint:} You can ``search" for the lower bound from $Q_1$ and subtracting by 0.0001, 
   and the upper bound using $Q_3$ and increasing by 0.0001. You will continue until you find 
@@ -646,6 +646,12 @@ repeat{
 
 (diff.rand.CI <- c(mu.lower.diff, mu.upper.diff))
 @  
+To find the confidence interval when doing a randomization test, it has to be done numerically. We did this by subtracting small values to find the lower bound starting from the mean until the p-value reaches 0.05. To find the upper bound we did the reciprocal. The randomization confidence intervals are as follows: 
+Closer: (0.1162, 0.1962)
+Further: (-0.2527, -0.1527)
+Difference: (-0.2689, 0.3589)
+These confidence intervals align with the bootstrap and t-test confidence intervals. There exists small variablitiy when running the test due to randomization. 
+
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
