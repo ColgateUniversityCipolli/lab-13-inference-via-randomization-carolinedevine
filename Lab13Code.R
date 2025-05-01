@@ -78,7 +78,6 @@ for(i in 1:R){
   resamples.closer$xbar[i] <- mean(curr.resample)
 }
 # shift so H0 is true
-
 delta.closer <- mean(resamples.closer$tstat) - 0 # null mu0 = 0
 
 resamples.null.closer <- resamples.closer |>
@@ -256,7 +255,7 @@ repeat{
   rand.closer <- tibble(xbars = rep(NA, R))
   
   # PREPROCESSING: shift the data to be mean 0 under H0
-  x.shift.closer <- dat.finches$close - mu.lower.closer
+  x.shift.closer <- dat.finches$closer - mu.lower.closer
   # RANDOMIZE / SHUFFLE
   for(i in 1:R){
     curr.rand <- x.shift.closer *
@@ -286,7 +285,7 @@ repeat{
   rand.closer <- tibble(xbars = rep(NA, R))
   
   # PREPROCESSING: shift the data to be mean 0 under H0
-  x.shift.closer <- dat.finches$close - mu.lower.closer
+  x.shift.closer <- dat.finches$closer - mu.upper.closer
   # RANDOMIZE / SHUFFLE
   for(i in 1:R){
     curr.rand <- x.shift.closer *
@@ -298,7 +297,7 @@ repeat{
   }
   # Thinking is hard
   rand.closer <- rand.closer |>
-    mutate(xbars = xbars + mu.lower.closer) # shifting back
+    mutate(xbars = xbars + mu.upper.closer) # shifting back
   
   # p-value  (one-sided)
   obs.mean.closer <- mean(dat.finches$closer)
@@ -311,7 +310,7 @@ repeat{
   }
 }
 
-c(mu.lower.closer, mu.upper.closer)
+closer.rand.CI <- c(mu.lower.closer, mu.upper.closer)
 
 
 ################################################################################
