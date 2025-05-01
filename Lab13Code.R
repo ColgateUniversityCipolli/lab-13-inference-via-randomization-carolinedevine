@@ -142,8 +142,8 @@ p.t.closer <- p.t.closer$p.value
 p.boot.further <- mean(resamples.null.further$tstat.shifted <= delta.further)
 # T-Test P-Value
 p.t.further <- t.test(dat.finches$further,
-                     mu = 0,
-                     alternative = "less")
+                      mu = 0,
+                      alternative = "less")
 p.t.further <- p.t.further$p.value
 
 ## Difference ##
@@ -155,8 +155,8 @@ p.high <- mean(resamples.null.diff$tstat.shifted >= high)
 p.boot.diff <- p.low + p.high
 # T-Test P-Value
 p.t.diff <- t.test(dat.finches$diff,
-                    mu = 0,
-                    alternative = "two.sided")
+                   mu = 0,
+                   alternative = "two.sided")
 p.t.diff <- p.t.diff$p.value
 
 comparison.pvals <- tibble(
@@ -210,7 +210,7 @@ CI.t.further <- t.test(x=dat.finches$further, mu = 0, conf.level = 0.95, alterna
 CI.t.further <- CI.t.further$conf.int
 
 # Diff
-CI.boot.further <- quantile(resamples.null.diff$xbar, c(0.025, 0.975))
+CI.boot.diff <- quantile(resamples.null.diff$xbar, c(0.025, 0.975))
 CI.t.diff <- t.test(x=dat.finches$diff, mu = 0, conf.level = 0.95, alternative = "two.sided")
 CI.t.diff <- CI.t.diff$conf.int
 
@@ -272,12 +272,17 @@ repeat{
   # p-value  (one-sided)
   obs.mean.closer <- mean(dat.finches$closer)
   p.val.closer <- mean(rand.closer$xbars >= obs.mean.closer)
-  
-  if(p.val.closer < 0.05){
-    break
-  }else{
-    mu.lower.closer <- mu.lower.closer - mu0.iterate
-  }
+  delta <- abs(mean(dat.finches$closer) - mu.upper)
+  low <- mu.upper.closer - delta # mirror
+  high<- mu.upper.closer + delta)   # xbar
+p.val <- mean(rand.closer$xbars <= low) +
+  mean(rand$xbars >= high)
+
+if(p.val.closer < 0.05){
+  break
+}else{
+  mu.lower.closer <- mu.lower.closer - mu0.iterate
+}
 }
 
 mu.upper.closer <- starting.point.closer
@@ -301,7 +306,7 @@ repeat{
   
   # p-value  (one-sided)
   obs.mean.closer <- mean(dat.finches$closer)
-  p.val.closer <- mean(rand.closer$xbars >= obs.mean.closer)
+  p.val.closer <- mean(rand.closer$xbars <= obs.mean.closer)
   
   if(p.val.closer < 0.05){
     break
